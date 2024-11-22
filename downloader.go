@@ -1,11 +1,43 @@
 package downloader
 
 import (
+	"errors"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 )
+
+type Client struct {
+	ResourceToDownload string
+	HTTPClient         *http.Client
+	DstFileName        string
+}
+
+type option func(*Client) error
+
+func WithResourceToDownload(stringURL string) option {
+	return func(c *Client) error {
+		_, err := url.Parse(stringURL)
+		if err != nil {
+			return errors.New("invalid url")
+		}
+		c.ResourceToDownload = stringURL
+		return nil
+	}
+}
+
+func NewClient(opts ...option) (*Client, error) {
+	c := &Client{}
+	for _, opt := range opts {
+		err := opt(c)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return c, nil
+}
 
 func DownloadFile(stringURL string) error {
 	// Set up the client.
