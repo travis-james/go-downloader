@@ -17,11 +17,11 @@ func main() {
 		os.Exit(1)
 	}
 	resp, err := http.Get("https://go.dev/dl/go1.23.3.windows-amd64.msi")
-	defer resp.Body.Close()
 	if err != nil {
 		fmt.Printf("%q", err)
 		os.Exit(1)
 	}
+	defer resp.Body.Close()
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
 		fmt.Printf("%q", err)

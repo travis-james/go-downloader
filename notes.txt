@@ -8,3 +8,7 @@ I will slice that.
 
 - If filename already exists, do nothing.
 - If download fails, delete file.
+
+
+THE NAME: go-downloader. Hyphen seems a bit strange, but seems to work:
+https://go.dev/play/p/MNfRtvAn0Po
