@@ -2,6 +2,7 @@ package downloader
 
 import (
 	"errors"
+	"flag"
 	"io"
 	"net/http"
 	"net/url"
@@ -9,27 +10,36 @@ import (
 	"path"
 )
 
-type Client struct {
-	ResourceToDownload string
-	HTTPClient         *http.Client
-	DstFileName        string
+type clientDownloader struct {
+	resourceToDownload []string
+	httpClient         *http.Client
+	dstFolder          string
 }
 
-type option func(*Client) error
+type option func(*clientDownloader) error
 
-func WithResourceToDownload(stringURL string) option {
-	return func(c *Client) error {
-		_, err := url.Parse(stringURL)
-		if err != nil {
-			return errors.New("invalid url")
+func withResourceToDownload(stringURL []string) option {
+	return func(c *clientDownloader) error {
+		for _, urp := range stringURL {
+			_, err := url.Parse(urp)
+			if err != nil {
+				return errors.New("invalid url")
+			}
 		}
-		c.ResourceToDownload = stringURL
+		c.resourceToDownload = stringURL
 		return nil
 	}
 }
 
-func NewClient(opts ...option) (*Client, error) {
-	c := &Client{}
+func withFolderToSaveTo(saveLocation string) option {
+	return func(c *clientDownloader) error {
+		c.dstFolder = saveLocation
+		return nil
+	}
+}
+
+func newClientDownloader(opts ...option) (*clientDownloader, error) {
+	c := &clientDownloader{}
 	for _, opt := range opts {
 		err := opt(c)
 		if err != nil {
@@ -68,4 +78,14 @@ func DownloadFile(stringURL string) error {
 		return err
 	}
 	return nil
+}
+
+func Main() int {
+	saveLocation := flag.String("d", "", "name of the location/directory to save files to")
+	flag.Parse()
+	newClientDownloader(
+		withFolderToSaveTo(*saveLocation),
+		withResourceToDownload(flag.Args()),
+	)
+	return 0
 }
