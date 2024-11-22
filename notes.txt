@@ -1,0 +1,10 @@
+What should it do?
+
+- Command line:
+file-downloader blehbleh.com/appv1.gzip boof.net/garo87.jpg ...etc
+
+- File will be named, appv1.gzip, garo87.jpg..., need to think how
+I will slice that.
+
+- If filename already exists, do nothing.
+- If download fails, delete file.
