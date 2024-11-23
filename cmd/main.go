@@ -1,16 +1,12 @@
 package main
 
-import (
-	"github.com/travis-james/go-downloader"
-)
-
 const FILE_NAME = "https://file-examples.com/storage/fef4e75e176737761a179bf/2017/10/file_example_JPG_100kB.jpg"
 
 func main() {
-	err := downloader.DownloadFile(FILE_NAME)
-	if err != nil {
-		panic(err)
-	}
+	// err := downloader.DownloadFile(FILE_NAME)
+	// if err != nil {
+	// 	panic(err)
+	// }
 	// out, err := os.Create(FILE_NAME)
 	// if err != nil {
 	// 	fmt.Printf("%q", err)

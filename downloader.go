@@ -2,7 +2,6 @@ package downloader
 
 import (
 	"errors"
-	"flag"
 	"io"
 	"net/http"
 	"net/url"
@@ -12,18 +11,34 @@ import (
 
 type clientDownloader struct {
 	resourceToDownload []string
-	httpClient         *http.Client
-	dstFolder          string
+	HttpClient         *http.Client
+	path               string
 }
 
 type option func(*clientDownloader) error
 
-func withResourceToDownload(stringURL []string) option {
+const (
+	ERROR_INVALID_URL      = "invalid url"
+	ERROR_NO_URL_SPECIFIED = "there are no urls to download from"
+)
+
+func isValidURL(stringURL string) bool {
+	parsedURL, err := url.Parse(stringURL)
+	if err != nil || parsedURL.Host == "" || parsedURL.Scheme == "" {
+		return false
+	}
+	return true
+}
+
+func WithResourceToDownload(stringURL []string) option {
 	return func(c *clientDownloader) error {
+		if len(stringURL) == 0 {
+			return errors.New(ERROR_NO_URL_SPECIFIED)
+		}
 		for _, urp := range stringURL {
-			_, err := url.Parse(urp)
-			if err != nil {
-				return errors.New("invalid url")
+			isValid := isValidURL(urp)
+			if !isValid {
+				return errors.New(ERROR_INVALID_URL)
 			}
 		}
 		c.resourceToDownload = stringURL
@@ -31,14 +46,14 @@ func withResourceToDownload(stringURL []string) option {
 	}
 }
 
-func withFolderToSaveTo(saveLocation string) option {
+func WithPathToSaveTo(saveLocation string) option {
 	return func(c *clientDownloader) error {
-		c.dstFolder = saveLocation
+		c.path = saveLocation
 		return nil
 	}
 }
 
-func newClientDownloader(opts ...option) (*clientDownloader, error) {
+func NewClientDownloader(opts ...option) (*clientDownloader, error) {
 	c := &clientDownloader{}
 	for _, opt := range opts {
 		err := opt(c)
@@ -49,25 +64,23 @@ func newClientDownloader(opts ...option) (*clientDownloader, error) {
 	return c, nil
 }
 
-func DownloadFile(stringURL string) error {
+func (c *clientDownloader) DownloadFile() error {
 	// Set up the client.
-	req, err := http.NewRequest("GET", stringURL, nil)
+	req, err := http.NewRequest("GET", c.resourceToDownload[0], nil)
 	if err != nil {
 		return err
 	}
 	// Set the User-Agent header to mimic a browser
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0")
 	// Get the resource.
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	//resp, err := http.Get(stringURL)
+	resp, err := c.HttpClient.Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 	// should check resp code.
 	// Create file to save to.
-	fileName := path.Base(stringURL)
+	fileName := path.Base(c.resourceToDownload[0])
 	out, err := os.Create(fileName)
 	if err != nil {
 		return err
@@ -80,12 +93,12 @@ func DownloadFile(stringURL string) error {
 	return nil
 }
 
-func Main() int {
-	saveLocation := flag.String("d", "", "name of the location/directory to save files to")
-	flag.Parse()
-	newClientDownloader(
-		withFolderToSaveTo(*saveLocation),
-		withResourceToDownload(flag.Args()),
-	)
-	return 0
-}
+// func Main() int {
+// 	saveLocation := flag.String("d", "", "name of the location/directory to save files to")
+// 	flag.Parse()
+// 	newClientDownloader(
+// 		withFolderToSaveTo(*saveLocation),
+// 		withResourceToDownload(flag.Args()),
+// 	)
+// 	return 0
+// }
