@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
 )
 
 type clientDownloader struct {
@@ -81,7 +82,7 @@ func (c *clientDownloader) DownloadFile() error {
 	// should check resp code.
 	// Create file to save to.
 	fileName := path.Base(c.resourceToDownload[0])
-	out, err := os.Create(fileName)
+	out, err := os.Create(filepath.Join(c.path, fileName))
 	if err != nil {
 		return err
 	}

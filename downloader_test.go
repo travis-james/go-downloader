@@ -3,6 +3,8 @@ package downloader_test
 import (
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -65,6 +67,17 @@ func TestDownloadFile(t *testing.T) {
 	err = client.DownloadFile()
 	if err != nil {
 		t.Fatal(err)
+	}
+	want, err := os.ReadFile("testdata/test.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := os.ReadFile(filepath.Join(path, "test.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cmp.Equal(want, got) {
+		t.Fatal(cmp.Diff(want, got))
 	}
 }
 
