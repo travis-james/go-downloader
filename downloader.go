@@ -2,6 +2,7 @@ package downloader
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"net/http"
@@ -103,4 +104,30 @@ func (c *clientDownloader) DownloadFile() error {
 		}
 	}
 	return nil
+}
+
+func Main() int {
+	pathToSaveTo := flag.String("path", "/", "the name of the path/directory to save the resources to")
+	flag.Usage = func() {
+		fmt.Printf("Usage: %s [-path] [URLs...]\n", os.Args[0])
+		fmt.Println("Download files at a specified URL(s)\nFlags:")
+		flag.PrintDefaults()
+	}
+	flag.Parse()
+
+	cd, err := NewClientDownloader(
+		WithPathToSaveTo(*pathToSaveTo),
+		WithResourceToDownload(flag.Args()),
+	)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return 1
+	}
+
+	err = cd.DownloadFile()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return 1
+	}
+	return 0
 }

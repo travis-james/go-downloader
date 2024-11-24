@@ -36,7 +36,7 @@ func TestNewClientDownloader_NoURLSpecified(t *testing.T) {
 	}
 }
 
-func TestDownloadFile(t *testing.T) {
+func TestDownloadFile_WithValidURLsTheResourceIsSavedToPath(t *testing.T) {
 	t.Parallel()
 	// Setup.
 	var (
