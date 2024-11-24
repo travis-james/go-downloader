@@ -14,7 +14,7 @@ import (
 
 type clientDownloader struct {
 	resourceToDownload []string
-	HttpClient         *http.Client
+	httpClient         *http.Client
 	path               string
 }
 
@@ -54,15 +54,21 @@ func WithResourceToDownload(stringURL []string) option {
 func WithPathToSaveTo(saveLocation string) option {
 	return func(c *clientDownloader) error {
 		c.path = saveLocation
-		if saveLocation == "" {
-			c.path = "/"
-		}
+		return nil
+	}
+}
+
+func WithHttpClient(client *http.Client) option {
+	return func(c *clientDownloader) error {
+		c.httpClient = client
 		return nil
 	}
 }
 
 func NewClientDownloader(opts ...option) (*clientDownloader, error) {
-	c := &clientDownloader{}
+	c := &clientDownloader{
+		httpClient: http.DefaultClient,
+	}
 	for _, opt := range opts {
 		err := opt(c)
 		if err != nil {
@@ -82,7 +88,7 @@ func (c *clientDownloader) DownloadFile() error {
 		// Set the User-Agent header to mimic a browser
 		req.Header.Set("User-Agent", DEFAULT_USER_AGENT)
 		// Get the resource.
-		resp, err := c.HttpClient.Do(req)
+		resp, err := c.httpClient.Do(req)
 		if err != nil {
 			return err
 		}
@@ -107,7 +113,7 @@ func (c *clientDownloader) DownloadFile() error {
 }
 
 func Main() int {
-	pathToSaveTo := flag.String("path", "/", "the name of the path/directory to save the resources to")
+	pathToSaveTo := flag.String("path", "", "the name of the path/directory to save the resources to if no argument is supplied it will save to current working directory")
 	flag.Usage = func() {
 		fmt.Printf("Usage: %s [-path] [URLs...]\n", os.Args[0])
 		fmt.Println("Download files at a specified URL(s)\nFlags:")

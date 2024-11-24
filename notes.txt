@@ -36,3 +36,7 @@ downloader.NewClient(
     Retry
     Headers
 )
+
+http://ipv4.download.thinkbroadband.com/5MB.zip
+
+go build -o downloader ./cmd/main.go
