@@ -2,6 +2,7 @@ package downloader
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -21,6 +22,7 @@ type option func(*clientDownloader) error
 const (
 	ERROR_INVALID_URL      = "invalid url"
 	ERROR_NO_URL_SPECIFIED = "there are no urls to download from"
+	ERROR_STATUS_NOT_OK    = "response did not return 200 ok, received"
 )
 
 func isValidURL(stringURL string) bool {
@@ -50,6 +52,9 @@ func WithResourceToDownload(stringURL []string) option {
 func WithPathToSaveTo(saveLocation string) option {
 	return func(c *clientDownloader) error {
 		c.path = saveLocation
+		if saveLocation == "" {
+			c.path = "/"
+		}
 		return nil
 	}
 }
@@ -79,7 +84,10 @@ func (c *clientDownloader) DownloadFile() error {
 		return err
 	}
 	defer resp.Body.Close()
-	// should check resp code.
+	if resp.StatusCode != http.StatusOK {
+		return errors.New(fmt.Sprintf("%s %d", ERROR_STATUS_NOT_OK, resp.StatusCode))
+	}
+
 	// Create file to save to.
 	fileName := path.Base(c.resourceToDownload[0])
 	out, err := os.Create(filepath.Join(c.path, fileName))
