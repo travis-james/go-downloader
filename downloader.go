@@ -20,6 +20,7 @@ type clientDownloader struct {
 type option func(*clientDownloader) error
 
 const (
+	DEFAULT_USER_AGENT     = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0"
 	ERROR_INVALID_URL      = "invalid url"
 	ERROR_NO_URL_SPECIFIED = "there are no urls to download from"
 	ERROR_STATUS_NOT_OK    = "response did not return 200 ok, received"
@@ -78,7 +79,7 @@ func (c *clientDownloader) DownloadFile() error {
 			return err
 		}
 		// Set the User-Agent header to mimic a browser
-		req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0")
+		req.Header.Set("User-Agent", DEFAULT_USER_AGENT)
 		// Get the resource.
 		resp, err := c.HttpClient.Do(req)
 		if err != nil {

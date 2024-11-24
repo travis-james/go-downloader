@@ -103,11 +103,3 @@ func TestDownloadFile(t *testing.T) {
 		t.Fatal(cmp.Diff(want, got))
 	}
 }
-
-// func TestDownloadFile_DownloadsFileWithoutErrors(t *testing.T) {
-// 	url := "http://www.golang-book.com/public/pdf/gobook.pdf"
-// 	err := downloader.DownloadFile(url)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// }
