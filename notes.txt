@@ -1,7 +1,7 @@
 What should it do?
 
 - Command line:
-file-downloader blehbleh.com/appv1.gzip boof.net/garo87.jpg ...etc
+file-downloader blehbleh.com/appv1.gzip boof.net/garo87.jpg -d /etc/save_here
 
 - File will be named, appv1.gzip, garo87.jpg..., need to think how
 I will slice that.
@@ -12,3 +12,27 @@ I will slice that.
 
 THE NAME: go-downloader. Hyphen seems a bit strange, but seems to work:
 https://go.dev/play/p/MNfRtvAn0Po
+
+
+
+BELOW is more complicated. Perhaps I could pass json on the Command
+line to be consumed to do this.
+downloader.NewClient(
+    DownloadOptions{
+        ResourceName
+        Timeout
+        FileDestination
+        FileCompression (bool)
+        ChecksumVerification (bool)
+        Retry
+        Headers
+    },
+    DownloadOptions{
+
+    }
+    FileCompression
+    ChecksumVerification
+    Timeout
+    Retry
+    Headers
+)
