@@ -71,43 +71,35 @@ func NewClientDownloader(opts ...option) (*clientDownloader, error) {
 }
 
 func (c *clientDownloader) DownloadFile() error {
-	// Set up the client.
-	req, err := http.NewRequest("GET", c.resourceToDownload[0], nil)
-	if err != nil {
-		return err
-	}
-	// Set the User-Agent header to mimic a browser
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0")
-	// Get the resource.
-	resp, err := c.HttpClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("%s %d", ERROR_STATUS_NOT_OK, resp.StatusCode))
-	}
+	for _, resource := range c.resourceToDownload {
+		// Set up the client.
+		req, err := http.NewRequest("GET", resource, nil)
+		if err != nil {
+			return err
+		}
+		// Set the User-Agent header to mimic a browser
+		req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0")
+		// Get the resource.
+		resp, err := c.HttpClient.Do(req)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			return errors.New(fmt.Sprintf("%s %d", ERROR_STATUS_NOT_OK, resp.StatusCode))
+		}
 
-	// Create file to save to.
-	fileName := path.Base(c.resourceToDownload[0])
-	out, err := os.Create(filepath.Join(c.path, fileName))
-	if err != nil {
-		return err
-	}
-	// Write the response to file.
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		return err
+		// Create file to save to.
+		fileName := path.Base(resource)
+		out, err := os.Create(filepath.Join(c.path, fileName))
+		if err != nil {
+			return err
+		}
+		// Write the response to file.
+		_, err = io.Copy(out, resp.Body)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
-
-// func Main() int {
-// 	saveLocation := flag.String("d", "", "name of the location/directory to save files to")
-// 	flag.Parse()
-// 	newClientDownloader(
-// 		withFolderToSaveTo(*saveLocation),
-// 		withResourceToDownload(flag.Args()),
-// 	)
-// 	return 0
-// }

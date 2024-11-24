@@ -26,3 +26,8 @@ coverage-html:
 .PHONY: clean
 clean:
 	rm -f $(COVERAGE_FILE) $(COVERAGE_HTML)
+
+# Notes for myself:
+# 'PHONY' avoids name conflicts. If there was a file the same
+# name as the make command, that would cause issues. It tells
+# make to run the command and NOT the file of the same name.
