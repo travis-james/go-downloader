@@ -79,7 +79,7 @@ func TestDownloadFile(t *testing.T) {
 
 	// Assert.
 	// Check json file.
-	want, err := os.ReadFile(filepath.Join(path, testJSON))
+	want, err := os.ReadFile(filepath.Join(testFolder, testJSON))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,7 +91,7 @@ func TestDownloadFile(t *testing.T) {
 		t.Fatal(cmp.Diff(want, got))
 	}
 	// check jpg file.
-	want, err = os.ReadFile(filepath.Join(path, testJPG))
+	want, err = os.ReadFile(filepath.Join(testFolder, testJPG))
 	if err != nil {
 		t.Fatal(err)
 	}
