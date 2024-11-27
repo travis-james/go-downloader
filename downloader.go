@@ -97,6 +97,12 @@ func (c *clientDownloader) DownloadFile() error {
 			return errors.New(fmt.Sprintf("%s %d", ERROR_STATUS_NOT_OK, resp.StatusCode))
 		}
 
+		// Create the directory if it doesn't exist
+		err = os.MkdirAll(c.path, os.ModePerm) // 0777 gives full permissions to everyone...
+		if err != nil {
+			return err
+		}
+
 		// Create file to save to.
 		fileName := path.Base(resource)
 		out, err := os.Create(filepath.Join(c.path, fileName))

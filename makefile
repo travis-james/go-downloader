@@ -2,6 +2,12 @@
 PROJECT_NAME := go_downloader
 COVERAGE_FILE := coverage.out
 COVERAGE_HTML := coverage.html
+CLI_BINARY := downloader
+
+# Build the binary
+.PHONY: build
+build:
+	go build -o $(CLI_BINARY) ./cmd/main.go
 
 # Default target
 .PHONY: all
@@ -25,7 +31,7 @@ coverage-html:
 # Clean up coverage files
 .PHONY: clean
 clean:
-	rm -f $(COVERAGE_FILE) $(COVERAGE_HTML)
+	rm -f $(COVERAGE_FILE) $(COVERAGE_HTML) $(CLI_BINARY)
 
 # Notes for myself:
 # 'PHONY' avoids name conflicts. If there was a file the same
