@@ -89,7 +89,7 @@ func TestDownloadFile_WithValidURLsTheResourceIsSavedToPath(t *testing.T) {
 		t.Fatal(err)
 	}
 	perm := stat.Mode().Perm()
-	if perm != downloader.OWNER_PERMISSION_600 {
+	if perm != downloader.PERMISSION_600 {
 		t.Errorf("want file mode 0o600, got 0o%o", perm)
 	}
 	// Check contents.
@@ -111,7 +111,7 @@ func TestDownloadFile_WithValidURLsTheResourceIsSavedToPath(t *testing.T) {
 		t.Fatal(err)
 	}
 	perm = stat.Mode().Perm()
-	if perm != downloader.OWNER_PERMISSION_600 {
+	if perm != downloader.PERMISSION_600 {
 		t.Errorf("want file mode 0o600, got 0o%o", perm)
 	}
 	// Check contents.
@@ -123,3 +123,15 @@ func TestDownloadFile_WithValidURLsTheResourceIsSavedToPath(t *testing.T) {
 		t.Fatal(cmp.Diff(want, got))
 	}
 }
+
+// TestMain is special to Go, it will alwasy execute first, purpose
+// is to setup any test fixtures.
+// In this case, if some test script calls exec downloader, then
+// the downloader.Main function should be executed as an independent
+// binary, in a sub process, just as if it were a “real” external
+// command.
+// func TestMain(m *testing.M) {
+// 	os.Exit(testscript.RunMain(m, map[string]func() int{
+// 		"downloader": downloader.Main,
+// 	}))
+// }
