@@ -78,7 +78,7 @@ func NewClientDownloader(opts ...option) (*clientDownloader, error) {
 	return c, nil
 }
 
-func (c *clientDownloader) DownloadFile() error {
+func (c clientDownloader) DownloadFile() error {
 	for _, resource := range c.resourceToDownload {
 		// Set up the client.
 		req, err := http.NewRequest("GET", resource, nil)

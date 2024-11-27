@@ -46,3 +46,7 @@ go build -o downloader ./cmd/main.go
 below works.
 ./downloader -path /home/tjh/code/projects/test/ https://onlinetestcase.com/wp-content/uploads/2023/06/585-KB.png https://onlinetestcase.com/wp-content/uploads/2023/06/1.1-MB-1.jpg
 can be test/ or test it seems.
+
+# What to do:
+-> file permissions, what should they be?
+-> tests for cli functionality
