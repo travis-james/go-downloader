@@ -58,9 +58,9 @@ func TestDownloadFile_WithValidURLsTheResourceIsSavedToPath(t *testing.T) {
 		}))
 	defer ts.Close()
 
-	path := t.TempDir()
+	tempPath := t.TempDir()
 	client, err := downloader.NewClientDownloader(
-		downloader.WithPathToSaveTo(&path),
+		downloader.WithPathToSaveTo(&tempPath),
 		downloader.WithResourceToDownload([]string{
 			ts.URL + fmt.Sprintf("/%s", testJSON),
 			ts.URL + fmt.Sprintf("/%s", testJPG),
@@ -83,7 +83,17 @@ func TestDownloadFile_WithValidURLsTheResourceIsSavedToPath(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	got, err := os.ReadFile(filepath.Join(path, testJSON))
+	// Check permissions.
+	stat, err := os.Stat(filepath.Join(tempPath, testJSON))
+	if err != nil {
+		t.Fatal(err)
+	}
+	perm := stat.Mode().Perm()
+	if perm != downloader.OWNER_PERMISSION_600 {
+		t.Errorf("want file mode 0o600, got 0o%o", perm)
+	}
+	// Check contents.
+	got, err := os.ReadFile(filepath.Join(tempPath, testJSON))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -95,7 +105,17 @@ func TestDownloadFile_WithValidURLsTheResourceIsSavedToPath(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	got, err = os.ReadFile(filepath.Join(path, testJPG))
+	// Check permissions.
+	stat, err = os.Stat(filepath.Join(tempPath, testJPG))
+	if err != nil {
+		t.Fatal(err)
+	}
+	perm = stat.Mode().Perm()
+	if perm != downloader.OWNER_PERMISSION_600 {
+		t.Errorf("want file mode 0o600, got 0o%o", perm)
+	}
+	// Check contents.
+	got, err = os.ReadFile(filepath.Join(tempPath, testJPG))
 	if err != nil {
 		t.Fatal(err)
 	}
