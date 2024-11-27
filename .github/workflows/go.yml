@@ -5,6 +5,8 @@ on:
     branches:
       - main
   pull_request:
+    branches:
+      - main
 
 jobs:
   test:
@@ -34,9 +36,8 @@ jobs:
         uses: vladopajic/go-test-coverage@v2
         with:
           profile: coverage.out
-          threshold: 80
+          threshold-total: 80
           local-prefix: github.com/travis-james/go-downloader
-          fail-coverage: true
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v3
