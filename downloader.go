@@ -2,6 +2,7 @@ package downloader
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,8 +14,8 @@ import (
 
 type clientDownloader struct {
 	resourceToDownload []string
-	HttpClient         *http.Client
-	path               string
+	httpClient         *http.Client
+	pathName           string
 }
 
 type option func(*clientDownloader) error
@@ -50,18 +51,31 @@ func WithResourceToDownload(stringURL []string) option {
 	}
 }
 
-func WithPathToSaveTo(saveLocation string) option {
+func WithPathToSaveTo(saveLocation *string) option {
 	return func(c *clientDownloader) error {
-		c.path = saveLocation
-		if saveLocation == "" {
-			c.path = "/"
+		if saveLocation == nil {
+			dir, err := os.Getwd()
+			if err != nil {
+				return err
+			}
+			saveLocation = &dir
 		}
+		c.pathName = *saveLocation
+		return nil
+	}
+}
+
+func WithHttpClient(client *http.Client) option {
+	return func(c *clientDownloader) error {
+		c.httpClient = client
 		return nil
 	}
 }
 
 func NewClientDownloader(opts ...option) (*clientDownloader, error) {
-	c := &clientDownloader{}
+	c := &clientDownloader{
+		httpClient: http.DefaultClient,
+	}
 	for _, opt := range opts {
 		err := opt(c)
 		if err != nil {
@@ -71,36 +85,88 @@ func NewClientDownloader(opts ...option) (*clientDownloader, error) {
 	return c, nil
 }
 
-func (c *clientDownloader) DownloadFile() error {
-	for _, resource := range c.resourceToDownload {
-		// Set up the client.
-		req, err := http.NewRequest("GET", resource, nil)
+func downloadResource(c *http.Client, resource string) ([]byte, error) {
+	// Set up the client.
+	req, err := http.NewRequest("GET", resource, nil)
+	if err != nil {
+		return []byte{}, err
+	}
+	// Set the User-Agent header to mimic a browser
+	req.Header.Set("User-Agent", DEFAULT_USER_AGENT)
+	// Get the resource.
+	resp, err := c.Do(req)
+	if err != nil {
+		return []byte{}, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return []byte{}, errors.New(fmt.Sprintf("%s %d", ERROR_STATUS_NOT_OK, resp.StatusCode))
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return body, nil
+}
+
+func writeFile(downloadedResource []byte, pathName, resourceName string) error {
+	// Create the directory if it doesn't exist
+	err := os.MkdirAll(pathName, os.ModePerm) // 0777 gives full permissions to everyone...
+	if err != nil {
+		return err
+	}
+
+	// Create file to save to.
+	fileName := path.Base(resourceName)
+	out, err := os.Create(filepath.Join(pathName, fileName))
+	if err != nil {
+		return err
+	}
+	// Write the response to file.
+	_, err = out.Write(downloadedResource)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c clientDownloader) DownloadFileAndSaveFile() error {
+	for _, resourceName := range c.resourceToDownload {
+		downloadedResource, err := downloadResource(c.httpClient, resourceName)
 		if err != nil {
 			return err
-		}
-		// Set the User-Agent header to mimic a browser
-		req.Header.Set("User-Agent", DEFAULT_USER_AGENT)
-		// Get the resource.
-		resp, err := c.HttpClient.Do(req)
-		if err != nil {
-			return err
-		}
-		defer resp.Body.Close()
-		if resp.StatusCode != http.StatusOK {
-			return errors.New(fmt.Sprintf("%s %d", ERROR_STATUS_NOT_OK, resp.StatusCode))
 		}
 
-		// Create file to save to.
-		fileName := path.Base(resource)
-		out, err := os.Create(filepath.Join(c.path, fileName))
-		if err != nil {
-			return err
-		}
-		// Write the response to file.
-		_, err = io.Copy(out, resp.Body)
+		err = writeFile(downloadedResource, c.pathName, resourceName)
 		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func Main() int {
+	pathToSaveTo := flag.String("path", "", "the name of the path/directory to save the resources to if no argument is supplied it will save to current working directory")
+	flag.Usage = func() {
+		fmt.Printf("Usage: %s [-path] [URLs...]\n", os.Args[0])
+		fmt.Println("Download files at a specified URL(s)\nFlags:")
+		flag.PrintDefaults()
+	}
+	flag.Parse()
+
+	cd, err := NewClientDownloader(
+		WithPathToSaveTo(pathToSaveTo),
+		WithResourceToDownload(flag.Args()),
+	)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return 1
+	}
+
+	err = cd.DownloadFileAndSaveFile()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return 1
+	}
+	return 0
 }

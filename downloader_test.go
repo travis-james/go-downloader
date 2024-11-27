@@ -36,7 +36,7 @@ func TestNewClientDownloader_NoURLSpecified(t *testing.T) {
 	}
 }
 
-func TestDownloadFile(t *testing.T) {
+func TestDownloadFile_WithValidURLsTheResourceIsSavedToPath(t *testing.T) {
 	t.Parallel()
 	// Setup.
 	var (
@@ -60,19 +60,19 @@ func TestDownloadFile(t *testing.T) {
 
 	path := t.TempDir()
 	client, err := downloader.NewClientDownloader(
-		downloader.WithPathToSaveTo(path),
+		downloader.WithPathToSaveTo(&path),
 		downloader.WithResourceToDownload([]string{
 			ts.URL + fmt.Sprintf("/%s", testJSON),
 			ts.URL + fmt.Sprintf("/%s", testJPG),
 		}),
+		downloader.WithHttpClient(ts.Client()),
 	)
 	if err != nil {
 		t.Fatal(err)
 	}
-	client.HttpClient = ts.Client()
 
 	// Run.
-	err = client.DownloadFile()
+	err = client.DownloadFileAndSaveFile()
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -6,7 +6,7 @@ file-downloader blehbleh.com/appv1.gzip boof.net/garo87.jpg -d /etc/save_here
 - File will be named, appv1.gzip, garo87.jpg..., need to think how
 I will slice that.
 
-- If filename already exists, do nothing.
+- If filename already exists, it overwrites.
 - If download fails, delete file.
 
 
@@ -36,3 +36,18 @@ downloader.NewClient(
     Retry
     Headers
 )
+
+https://onlinetestcase.com/wp-content/uploads/2023/06/585-KB.png
+https://onlinetestcase.com/wp-content/uploads/2023/06/1.1-MB-1.jpg
+
+go build -o downloader ./cmd/main.go
+./downloader -flags
+
+below works.
+./downloader -path /home/tjh/code/go-downloader/actual https://onlinetestcase.com/wp-content/uploads/2023/06/585-KB.png https://onlinetestcase.com/wp-content/uploads/2023/06/1.1-MB-1.jpg
+can be test/ or test it seems.
+
+# What to do:
+-> file permissions, what should they be?
+-> tests for cli functionality
+-> default save files to current working directory
