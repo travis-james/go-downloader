@@ -25,6 +25,8 @@ const (
 	ERROR_INVALID_URL      = "invalid url"
 	ERROR_NO_URL_SPECIFIED = "there are no urls to download from"
 	ERROR_STATUS_NOT_OK    = "response did not return 200 ok, received"
+	PERMISSION_600         = 0o600 // Owner can read/write, no permissions for group and others.
+	PERMISSION_700         = 0o700 // Owner can read/write/execute, no permissions for group and others.
 )
 
 func isValidURL(stringURL string) bool {
@@ -111,14 +113,15 @@ func downloadResource(c *http.Client, resource string) ([]byte, error) {
 
 func writeFile(downloadedResource []byte, pathName, resourceName string) error {
 	// Create the directory if it doesn't exist
-	err := os.MkdirAll(pathName, os.ModePerm) // 0777 gives full permissions to everyone...
+	err := os.MkdirAll(pathName, PERMISSION_700)
 	if err != nil {
 		return err
 	}
 
 	// Create file to save to.
-	fileName := path.Base(resourceName)
-	out, err := os.Create(filepath.Join(pathName, fileName))
+	//fileName :=
+	fileName := filepath.Join(pathName, path.Base(resourceName))
+	out, err := os.Create(fileName)
 	if err != nil {
 		return err
 	}
@@ -127,7 +130,7 @@ func writeFile(downloadedResource []byte, pathName, resourceName string) error {
 	if err != nil {
 		return err
 	}
-	return nil
+	return os.Chmod(fileName, PERMISSION_600)
 }
 
 func (c clientDownloader) DownloadFileAndSaveFile() error {
