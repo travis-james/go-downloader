@@ -15,7 +15,7 @@ import (
 type clientDownloader struct {
 	resourceToDownload []string
 	httpClient         *http.Client
-	path               string
+	pathName           string
 }
 
 type option func(*clientDownloader) error
@@ -51,9 +51,16 @@ func WithResourceToDownload(stringURL []string) option {
 	}
 }
 
-func WithPathToSaveTo(saveLocation string) option {
+func WithPathToSaveTo(saveLocation *string) option {
 	return func(c *clientDownloader) error {
-		c.path = saveLocation
+		if saveLocation == nil {
+			dir, err := os.Getwd()
+			if err != nil {
+				return err
+			}
+			saveLocation = &dir
+		}
+		c.pathName = *saveLocation
 		return nil
 	}
 }
@@ -78,39 +85,59 @@ func NewClientDownloader(opts ...option) (*clientDownloader, error) {
 	return c, nil
 }
 
-func (c clientDownloader) DownloadFile() error {
-	for _, resource := range c.resourceToDownload {
-		// Set up the client.
-		req, err := http.NewRequest("GET", resource, nil)
+func downloadResource(c *http.Client, resource string) ([]byte, error) {
+	// Set up the client.
+	req, err := http.NewRequest("GET", resource, nil)
+	if err != nil {
+		return []byte{}, err
+	}
+	// Set the User-Agent header to mimic a browser
+	req.Header.Set("User-Agent", DEFAULT_USER_AGENT)
+	// Get the resource.
+	resp, err := c.Do(req)
+	if err != nil {
+		return []byte{}, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return []byte{}, errors.New(fmt.Sprintf("%s %d", ERROR_STATUS_NOT_OK, resp.StatusCode))
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return body, nil
+}
+
+func writeFile(downloadedResource []byte, pathName, resourceName string) error {
+	// Create the directory if it doesn't exist
+	err := os.MkdirAll(pathName, os.ModePerm) // 0777 gives full permissions to everyone...
+	if err != nil {
+		return err
+	}
+
+	// Create file to save to.
+	fileName := path.Base(resourceName)
+	out, err := os.Create(filepath.Join(pathName, fileName))
+	if err != nil {
+		return err
+	}
+	// Write the response to file.
+	_, err = out.Write(downloadedResource)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c clientDownloader) DownloadFileAndSaveFile() error {
+	for _, resourceName := range c.resourceToDownload {
+		downloadedResource, err := downloadResource(c.httpClient, resourceName)
 		if err != nil {
 			return err
-		}
-		// Set the User-Agent header to mimic a browser
-		req.Header.Set("User-Agent", DEFAULT_USER_AGENT)
-		// Get the resource.
-		resp, err := c.httpClient.Do(req)
-		if err != nil {
-			return err
-		}
-		defer resp.Body.Close()
-		if resp.StatusCode != http.StatusOK {
-			return errors.New(fmt.Sprintf("%s %d", ERROR_STATUS_NOT_OK, resp.StatusCode))
 		}
 
-		// Create the directory if it doesn't exist
-		err = os.MkdirAll(c.path, os.ModePerm) // 0777 gives full permissions to everyone...
-		if err != nil {
-			return err
-		}
-
-		// Create file to save to.
-		fileName := path.Base(resource)
-		out, err := os.Create(filepath.Join(c.path, fileName))
-		if err != nil {
-			return err
-		}
-		// Write the response to file.
-		_, err = io.Copy(out, resp.Body)
+		err = writeFile(downloadedResource, c.pathName, resourceName)
 		if err != nil {
 			return err
 		}
@@ -128,7 +155,7 @@ func Main() int {
 	flag.Parse()
 
 	cd, err := NewClientDownloader(
-		WithPathToSaveTo(*pathToSaveTo),
+		WithPathToSaveTo(pathToSaveTo),
 		WithResourceToDownload(flag.Args()),
 	)
 	if err != nil {
@@ -136,7 +163,7 @@ func Main() int {
 		return 1
 	}
 
-	err = cd.DownloadFile()
+	err = cd.DownloadFileAndSaveFile()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 1

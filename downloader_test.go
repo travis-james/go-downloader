@@ -60,7 +60,7 @@ func TestDownloadFile_WithValidURLsTheResourceIsSavedToPath(t *testing.T) {
 
 	path := t.TempDir()
 	client, err := downloader.NewClientDownloader(
-		downloader.WithPathToSaveTo(path),
+		downloader.WithPathToSaveTo(&path),
 		downloader.WithResourceToDownload([]string{
 			ts.URL + fmt.Sprintf("/%s", testJSON),
 			ts.URL + fmt.Sprintf("/%s", testJPG),
@@ -72,7 +72,7 @@ func TestDownloadFile_WithValidURLsTheResourceIsSavedToPath(t *testing.T) {
 	}
 
 	// Run.
-	err = client.DownloadFile()
+	err = client.DownloadFileAndSaveFile()
 	if err != nil {
 		t.Fatal(err)
 	}
